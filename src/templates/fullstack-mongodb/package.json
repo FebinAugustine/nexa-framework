@@ -1,0 +1,12 @@
+{
+  "name": "fsm",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "tailwindcss": "latest",
+    "@tailwindcss/node": "latest",
+    "jsonwebtoken": "latest",
+    "bcryptjs": "latest",
+    "mongoose": "latest"
+  }
+}
