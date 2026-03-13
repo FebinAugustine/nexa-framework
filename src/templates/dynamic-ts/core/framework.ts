@@ -1,6 +1,8 @@
-import { getDynamicCSS } from './tailwind.js';
-export const html = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] || ""), "");
-export async function renderPage(pageResult) {
+import { getDynamicCSS } from './tailwind';
+export const html = (strings: TemplateStringsArray, ...values: any[]): string => 
+    strings.reduce((acc, str, i) => acc + str + (values[i] || ""), "");
+
+export async function renderPage(pageResult: string | { head?: string; body: string }): Promise<string> {
     const { head = "", body } = typeof pageResult === 'object' && pageResult !== null && 'body' in pageResult 
         ? pageResult 
         : { body: pageResult };

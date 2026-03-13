@@ -32,16 +32,21 @@ bun add -g nexa-framework
 nexa init my-project
 
 # Static website template
-nexa init my-project --type=static
+nexa init my-project --template=static
 
 # Dynamic web app template (with login/dashboard)
-nexa init my-project --type=dynamic
+nexa init my-project --template=dynamic
 
 # Blog template (with dynamic routing)
-nexa init my-project --type=blog
+nexa init my-project --template=blog
+
+# TypeScript template (with TypeScript support)
+nexa init my-project --template=static --typescript
+nexa init my-project --template=dynamic --typescript
+nexa init my-project --template=blog --typescript
 
 cd my-project
-bun --hot server.js
+bun --hot server.ts  # or server.js for JavaScript
 ```
 
 ## Project Structure (The Blueprint)
@@ -230,7 +235,90 @@ export default function ProductPage({ product }) {
 }
 ```
 
-#### Example Usage:
+#### NexaStore: Signal-based State Orchestrator
+
+For complex applications, Nexa provides a Redux-like state management system called NexaStore that works with signals. It provides structured state management with action dispatch and subscription capabilities.
+
+```javascript
+// state/userStore.js
+import { createNexaStore } from '../core/store.js';
+
+export const userStore = createNexaStore(
+  { name: 'Guest', role: 'viewer', isAuth: false }, // Initial State
+  {
+    // Actions
+    login(state, userData) {
+      state.name.set(userData.name);
+      state.role.set(userData.role);
+      state.isAuth.set(true);
+    },
+    logout(state) {
+      state.name.set('Guest');
+      state.isAuth.set(false);
+    }
+  }
+);
+```
+
+Using NexaStore in a page:
+```javascript
+// pages/profile.js
+import { html } from '../core/framework.js';
+
+export default function ProfilePage() {
+  return {
+    head: html`<title>Profile - Nexa Framework</title>`,
+    body: html`
+      <main class="h-screen flex items-center justify-center bg-gray-50">
+        <div class="text-center">
+          <h1 class="text-4xl font-bold text-gray-900 mb-4">
+            Welcome, <span id="username">Guest</span>
+          </h1>
+          <p class="text-gray-600 mb-6">Role: <span id="user-role">viewer</span></p>
+          <button id="login-btn" class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+            Login
+          </button>
+          <button id="logout-btn" class="ml-4 px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors">
+            Logout
+          </button>
+        </div>
+      </main>
+
+      <script type="module">
+        import { userStore } from '/state/userStore.js';
+        
+        const usernameEl = document.getElementById('username');
+        const roleEl = document.getElementById('user-role');
+        const loginBtn = document.getElementById('login-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+
+        // Subscribe to state changes
+        userStore.subscribe('name', (value) => {
+          usernameEl.textContent = value;
+        });
+
+        userStore.subscribe('role', (value) => {
+          roleEl.textContent = value;
+        });
+
+        // Action handlers
+        loginBtn.addEventListener('click', () => {
+          userStore.dispatch('login', {
+            name: 'John Doe',
+            role: 'admin'
+          });
+        });
+
+        logoutBtn.addEventListener('click', () => {
+          userStore.dispatch('logout');
+        });
+      </script>
+    `
+  };
+}
+```
+
+#### Example Usage: Counter Implementation
 
 The generated project includes a ready-to-use counter implementation:
 
@@ -321,6 +409,118 @@ Because Nexa runs on Bun, it can handle ~3x more requests per second on the same
 - **Silent Refresh**: The core/router.js handles token rotation automatically. If an access token is expired but a valid refresh token is present, the router transparently issues a new access token before rendering the page.
 - **Database Backed**: Refresh tokens must be stored in the database (lib/sql.js) to support remote logout and security auditing.
 - **Security**: Both cookies must be HttpOnly, Secure, and SameSite=Strict.
+
+## The Zero-API Layer (Distributed Execution)
+
+### Philosophy
+The network should be transparent. Calling a server function from the client should feel local.
+
+### How it Works
+Nexa introduces a `window.Nexa` global object that acts as a proxy to your server-side services. You can call backend functions directly from client-side script tags without writing any API routes or fetch wrappers.
+
+### Example
+
+**Server-side service in `lib/services/userService.js`:**
+```javascript
+// This is a standard server-side service
+export async function updateProfile(userId, data) {
+    // Database logic here...
+    return { success: true };
+}
+```
+
+**Client-side usage in any page:**
+```javascript
+export default function ProfilePage() {
+    return html`
+        <button id="saveBtn">Save Profile</button>
+
+        <script type="module">
+            document.getElementById('saveBtn').onclick = async () => {
+                // NO FETCH, NO API ROUTE, NO BOILERPLATE
+                const result = await Nexa.services.userService.updateProfile(123, { name: 'New Name' });
+                alert(result.success ? "Saved!" : "Error");
+            };
+        </script>
+    `;
+}
+```
+
+### Key Features
+- **Zero API Boilerplate**: No need to create API routes just to call server functions
+- **Runtime Agnostic**: Works in any standard `<script>` tag (not tied to React/forms)
+- **Automatic Security**: Proxy requests are subjected to the same Security Shield and Auth Gate as standard pages
+- **Type Inference**: Uses JSDoc or TypeScript for autocomplete support
+- **High Performance**: Uses Bun's native JSON serialization for maximum throughput
+
+### Constraints
+- Only functions exported from `lib/services/` are eligible for proxying
+- Functions must be async or return promises for async operations
+- Arguments and return values must be JSON-serializable
+
+## TypeScript Support
+
+Nexa supports TypeScript out of the box with Bun's built-in transpiler, providing a "no-build" TypeScript experience.
+
+### Key Features
+- **Native TypeScript Execution**: Bun treats `.ts` and `.tsx` files as first-class citizens without any configuration
+- **Zero Build Step**: Run TypeScript files directly with `bun --hot server.ts`
+- **Type-Safe Zero-API Layer**: Services in `lib/services/*.ts` provide type inference to client-side code
+- **IDE Support**: Full autocompletion for backend functions in client-side script tags
+
+### Getting Started with TypeScript
+```typescript
+// lib/services/db.ts
+export async function getCount(): Promise<number> {
+    return 42;
+}
+```
+
+```typescript
+// pages/index.ts
+import { html } from '../core/framework.js';
+
+export default function HomePage() {
+    return {
+        head: html`<title>Home - Nexa</title>`,
+        body: html`
+            <div class="p-10">
+                <h1 class="text-4xl font-bold">Welcome to Nexa</h1>
+                <p class="mt-4">Count: <span id="count">0</span></p>
+            </div>
+
+            <script type="module">
+                // This will have type hints if your IDE is active
+                const count = await Nexa.services.db.getCount();
+                document.getElementById('count').textContent = count;
+            </script>
+        `
+    };
+}
+```
+
+### tsconfig.json
+A basic tsconfig.json is automatically generated when using the `--typescript` flag:
+
+```json
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "react-jsx",
+    "jsxImportSource": "react",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true
+  },
+  "include": ["**/*"],
+  "exclude": ["node_modules"]
+}
+```
 
 ## Governance & Contribution
 - **Standardization**: All core framework changes must be benchmarked against the 12ms SSR baseline.

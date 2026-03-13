@@ -11,6 +11,7 @@
     "@tailwindcss/node": "latest",
     "marked": "latest",
     "jose": "latest",
+    "jsonwebtoken": "latest",
     "mongodb": "latest",
     "postgres": "latest",
     "redis": "latest"

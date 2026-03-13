@@ -15,57 +15,109 @@ if (command === "init") {
     console.log(`\n🚀 Initializing Nexa Core for ${projectName}...`);
 
     // Template selection
-    const templates = ["default", "dynamic", "blog", "static", "fullstack-mongodb", "fullstack-postgres"];
+    const templates = ["static", "dynamic", "fullstack-mongodb", "fullstack-postgres"];
+    const tsTemplates = ["static-ts", "dynamic-ts"];
     console.log("\n📋 Available Templates:");
     templates.forEach((template, index) => {
         console.log(`   ${index + 1}. ${template.charAt(0).toUpperCase() + template.slice(1)}`);
     });
 
+    // Check if TypeScript flag is specified
+    const isTypeScript = args.includes("--typescript") || args.includes("--ts");
+
     // Interactive template selection
-    let selectedTemplate = "default";
-    const readline = require("node:readline").createInterface({
-        input: process.stdin,
-        output: process.stdout
-    });
+     // Check if template is specified via command line --template option
+     let selectedTemplate = "static";
+     const templateIndex = args.findIndex(arg => arg.startsWith("--template"));
+     if (templateIndex !== -1) {
+         let templateOption;
+         if (args[templateIndex].includes("=")) {
+             templateOption = args[templateIndex].split("=")[1];
+         } else {
+             templateOption = args[templateIndex + 1];
+         }
+         
+         if (templateOption && templates.includes(templateOption)) {
+             selectedTemplate = templateOption;
+             console.log(`\n📦 Using ${selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} template (from command line)...`);
+         } else {
+             console.log(`\n⚠️  Template "${templateOption}" not found. Available templates: ${templates.join(", ")}`);
+             console.log("\n📦 Using Static template by default...");
+             selectedTemplate = "static";
+         }
+     } else {
+         // Interactive template selection
+         const readline = require("node:readline").createInterface({
+             input: process.stdin,
+             output: process.stdout
+         });
 
-    const answer = await new Promise((resolve) => {
-        readline.question("\n🔧 Choose a template (1-5) or press Enter for Default: ", resolve);
-    });
-    readline.close();
+         const answer = await new Promise((resolve) => {
+                readline.question("\n🔧 Choose a template (1-4) or press Enter for Static: ", resolve);
+         });
+         readline.close();
 
-    if (answer) {
-        const choice = parseInt(answer.trim());
-        if (choice >= 1 && choice <= templates.length) {
-            selectedTemplate = templates[choice - 1];
-        } else {
-            console.log("\n⚠️  Invalid choice. Using Default template...");
-            selectedTemplate = "default";
-        }
-    }
+         if (answer) {
+             const choice = parseInt(answer.trim());
+             if (choice >= 1 && choice <= templates.length) {
+                 selectedTemplate = templates[choice - 1];
+             } else {
+                 console.log("\n⚠️  Invalid choice. Using Static template...");
+                 selectedTemplate = "static";
+             }
+         }
+     }
 
     console.log(`\n📦 Using ${selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} template...`);
 
-    const folders = ["core", "config", "lib", "api", "components", "pages", "state", "public"];
+    // Create folders based on template type
+     let folders;
+     if (selectedTemplate === "static") {
+         folders = ["core", "components", "pages", "state", "public"]; // Static templates don't need API, lib, or config folders
+     } else {
+         folders = ["core", "config", "lib", "api", "components", "pages", "state", "public"]; // Full templates have all folders
+     }
+    
     for (const folder of folders) {
         await mkdir(join(projectName, folder), { recursive: true });
     }
 
-    // 1. Write the Blueprint
-    const templateDir = join(resolve(), "src", "templates", selectedTemplate);
+     // 1. Write the Blueprint
+    // Use TypeScript template if --typescript flag is specified and template exists
+    let finalTemplate = selectedTemplate;
+    if (isTypeScript && (selectedTemplate === "static" || selectedTemplate === "dynamic")) {
+        finalTemplate = `${selectedTemplate}-ts`;
+        console.log(`🔧 Using TypeScript version of ${selectedTemplate} template...`);
+    } else if (isTypeScript) {
+        console.log(`⚠️ TypeScript template not available for ${selectedTemplate}. Using JavaScript template with TypeScript core files...`);
+    }
+    
+    const templateDir = join(__dirname, "..", "src", "templates", finalTemplate);
+    console.log("DEBUG: Full template directory path:", templateDir);
     
     // Write default core files (required for all templates)
-    await writeFile(join(projectName, "core/framework.js"), getFrameworkTemplate());
-    await writeFile(join(projectName, "core/router.js"), getRouterTemplate());
-    await writeFile(join(projectName, "core/tailwind.js"), getTailwindTemplate());
+    const frameworkFileName = isTypeScript ? "framework.ts" : "framework.js";
+    const routerFileName = isTypeScript ? "router.ts" : "router.js";
+    const tailwindFileName = isTypeScript ? "tailwind.ts" : "tailwind.js";
+    const securityFileName = isTypeScript ? "security.ts" : "security.js";
+    
+    await writeFile(join(projectName, "core", frameworkFileName), getFrameworkTemplate(isTypeScript));
+    await writeFile(join(projectName, "core", routerFileName), await getRouterTemplate(selectedTemplate, isTypeScript));
+    await writeFile(join(projectName, "core", tailwindFileName), getTailwindTemplate(isTypeScript));
     await writeFile(join(projectName, "core/tailwind.css"), getTailwindCSSTemplate());
-    await writeFile(join(projectName, "core/security.js"), getSecurityTemplate());
+    await writeFile(join(projectName, "core", securityFileName), getSecurityTemplate(isTypeScript));
     
     // Copy template-specific core files (if any)
     if (await directoryExists(join(templateDir, "core"))) {
         const coreFiles = await readdir(join(templateDir, "core"));
         for (const file of coreFiles) {
             const content = await readFile(join(templateDir, "core", file), "utf-8");
-            await writeFile(join(projectName, "core", file), content);
+            let destFileName = file;
+            // If using TypeScript but template files are still .js, rename them
+            if (isTypeScript && file.endsWith(".js") && !file.endsWith(".d.ts")) {
+                destFileName = file.replace(".js", ".ts");
+            }
+            await writeFile(join(projectName, "core", destFileName), content);
         }
     }
     
@@ -74,16 +126,37 @@ if (command === "init") {
         const stateFiles = await readdir(join(templateDir, "state"));
         for (const file of stateFiles) {
             const content = await readFile(join(templateDir, "state", file), "utf-8");
-            await writeFile(join(projectName, "state", file), content);
+            let destFileName = file;
+            if (isTypeScript && file.endsWith(".js") && !file.endsWith(".d.ts")) {
+                destFileName = file.replace(".js", ".ts");
+            }
+            await writeFile(join(projectName, "state", destFileName), content);
         }
     }
     
-    // Copy template-specific config files (if any)
-    if (await directoryExists(join(templateDir, "config"))) {
-        const configFiles = await readdir(join(templateDir, "config"));
-        for (const file of configFiles) {
-            const content = await readFile(join(templateDir, "config", file), "utf-8");
-            await writeFile(join(projectName, "config", file), content);
+     // Copy template-specific config files (if any and not static template)
+     if (selectedTemplate !== "static" && await directoryExists(join(templateDir, "config"))) {
+         const configFiles = await readdir(join(templateDir, "config"));
+         for (const file of configFiles) {
+             const content = await readFile(join(templateDir, "config", file), "utf-8");
+             let destFileName = file;
+             if (isTypeScript && file.endsWith(".js") && !file.endsWith(".d.ts")) {
+                 destFileName = file.replace(".js", ".ts");
+             }
+             await writeFile(join(projectName, "config", destFileName), content);
+         }
+     }
+    
+    // Copy template-specific components (if any)
+    if (await directoryExists(join(templateDir, "components"))) {
+        const componentsFiles = await readdir(join(templateDir, "components"));
+        for (const file of componentsFiles) {
+            const content = await readFile(join(templateDir, "components", file), "utf-8");
+            let destFileName = file;
+            if (isTypeScript && file.endsWith(".js") && !file.endsWith(".d.ts")) {
+                destFileName = file.replace(".js", ".ts");
+            }
+            await writeFile(join(projectName, "components", destFileName), content);
         }
     }
     
@@ -100,55 +173,133 @@ if (command === "init") {
                 const files = await readdir(srcDir);
                 for (const file of files) {
                     const content = await readFile(join(srcDir, file), "utf-8");
-                    await writeFile(join(destDir, file), content);
+                    let destFileName = file;
+                    if (isTypeScript && file.endsWith(".js") && !file.endsWith(".d.ts")) {
+                        destFileName = file.replace(".js", ".ts");
+                    }
+                    await writeFile(join(destDir, destFileName), content);
                 }
             } else {
                 // Copy file directly
                 const content = await readFile(join(templateDir, "lib", entry.name), "utf-8");
-                await writeFile(join(projectName, "lib", entry.name), content);
+                let destFileName = entry.name;
+                if (isTypeScript && entry.name.endsWith(".js") && !entry.name.endsWith(".d.ts")) {
+                    destFileName = entry.name.replace(".js", ".ts");
+                }
+                await writeFile(join(projectName, "lib", destFileName), content);
             }
         }
     }
     
-    // Write default pages and API files (if template doesn't provide them)
-    if (!await directoryExists(join(templateDir, "pages"))) {
-        await writeFile(join(projectName, "pages/index.js"), getIndexPageTemplate());
-    } else {
-        const pagesFiles = await readdir(join(templateDir, "pages"));
-        for (const file of pagesFiles) {
-            const content = await readFile(join(templateDir, "pages", file), "utf-8");
-            await writeFile(join(projectName, "pages", file), content);
-        }
-    }
-    
-    if (!await directoryExists(join(templateDir, "api"))) {
-        await writeFile(join(projectName, "api/health.js"), getHealthTemplate());
-    } else {
+    // Copy template-specific API files (if any)
+    if (selectedTemplate !== "static" && await directoryExists(join(templateDir, "api"))) {
         const apiFiles = await readdir(join(templateDir, "api"));
         for (const file of apiFiles) {
             const content = await readFile(join(templateDir, "api", file), "utf-8");
-            await writeFile(join(projectName, "api", file), content);
+            let destFileName = file;
+            if (isTypeScript && file.endsWith(".js") && !file.endsWith(".d.ts")) {
+                destFileName = file.replace(".js", ".ts");
+            }
+            await writeFile(join(projectName, "api", destFileName), content);
+        }
+    }
+    
+    // Copy template-specific pages files (if any)
+    if (await directoryExists(join(templateDir, "pages"))) {
+        const pagesEntries = await readdir(join(templateDir, "pages"), { withFileTypes: true });
+        for (const entry of pagesEntries) {
+            if (entry.isDirectory()) {
+                // Recursively copy subdirectories (e.g., pages/blog)
+                const srcDir = join(templateDir, "pages", entry.name);
+                const destDir = join(projectName, "pages", entry.name);
+                await mkdir(destDir, { recursive: true });
+                
+                const files = await readdir(srcDir);
+                for (const file of files) {
+                    const content = await readFile(join(srcDir, file), "utf-8");
+                    let destFileName = file;
+                    if (isTypeScript && file.endsWith(".js") && !file.endsWith(".d.ts")) {
+                        destFileName = file.replace(".js", ".ts");
+                    }
+                    await writeFile(join(destDir, destFileName), content);
+                }
+            } else {
+                // Copy file directly
+                const content = await readFile(join(templateDir, "pages", entry.name), "utf-8");
+                let destFileName = entry.name;
+                if (isTypeScript && entry.name.endsWith(".js") && !entry.name.endsWith(".d.ts")) {
+                    destFileName = entry.name.replace(".js", ".ts");
+                }
+                await writeFile(join(projectName, "pages", destFileName), content);
+            }
+        }
+    }
+    
+    // Copy public files (if any) - these should remain unchanged
+    if (await directoryExists(join(templateDir, "public"))) {
+        const publicEntries = await readdir(join(templateDir, "public"), { withFileTypes: true });
+        for (const entry of publicEntries) {
+            if (entry.isDirectory()) {
+                const srcDir = join(templateDir, "public", entry.name);
+                const destDir = join(projectName, "public", entry.name);
+                await mkdir(destDir, { recursive: true });
+                
+                const files = await readdir(srcDir);
+                for (const file of files) {
+                    const content = await readFile(join(srcDir, file), "utf-8");
+                    await writeFile(join(destDir, file), content);
+                }
+            } else {
+                const content = await readFile(join(templateDir, "public", entry.name), "utf-8");
+                await writeFile(join(projectName, "public", entry.name), content);
+            }
         }
     }
     
     // Copy other files
-    await writeFile(join(projectName, "server.js"), getServerTemplate());
+    const serverFileName = isTypeScript ? "server.ts" : "server.js";
+    await writeFile(join(projectName, serverFileName), getServerTemplate(isTypeScript));
+    
+    // Write tsconfig.json if TypeScript project
+    if (isTypeScript) {
+        await writeFile(join(projectName, "tsconfig.json"), getTsConfigTemplate());
+        console.log("📝 Created tsconfig.json for TypeScript support");
+    }
     await writeFile(join(projectName, "NEXA_MANIFESTO.md"), getManifestoTemplate());
     // Write package.json - use template-specific if available
-    const templatePackageJson = join(templateDir, "package.json");
-    if (await fileExists(templatePackageJson)) {
-        const content = await readFile(templatePackageJson, "utf-8");
-        const pkg = JSON.parse(content);
-        pkg.name = projectName;
-        await writeFile(join(projectName, "package.json"), JSON.stringify(pkg, null, 2));
-    } else {
-        await writeFile(join(projectName, "package.json"), JSON.stringify({
-            name: projectName,
-            version: "1.0.0",
-            type: "module",
-            dependencies: { "tailwindcss": "latest", "@tailwindcss/node": "latest" }
-        }, null, 2));
-    }
+     const templatePackageJson = join(templateDir, "package.json");
+     if (await fileExists(templatePackageJson)) {
+         const content = await readFile(templatePackageJson, "utf-8");
+         const pkg = JSON.parse(content);
+         pkg.name = projectName;
+         // For static template, remove jsonwebtoken dependency if present
+         if (selectedTemplate === "static" && pkg.dependencies && pkg.dependencies["jsonwebtoken"]) {
+             delete pkg.dependencies["jsonwebtoken"];
+         }
+         // Ensure jsonwebtoken is included for non-static templates if not already present
+         if (selectedTemplate !== "static") {
+             if (!pkg.dependencies) pkg.dependencies = {};
+             if (!pkg.dependencies["jsonwebtoken"]) {
+                 pkg.dependencies["jsonwebtoken"] = "latest";
+             }
+         }
+         await writeFile(join(projectName, "package.json"), JSON.stringify(pkg, null, 2));
+     } else {
+         const dependencies = { 
+             "tailwindcss": "latest", 
+             "@tailwindcss/node": "latest"
+         };
+         // Only add jsonwebtoken for non-static templates
+         if (selectedTemplate !== "static") {
+             dependencies["jsonwebtoken"] = "latest";
+         }
+         await writeFile(join(projectName, "package.json"), JSON.stringify({
+             name: projectName,
+             version: "1.0.0",
+             type: "module",
+             dependencies: dependencies
+         }, null, 2));
+     }
 
     // 2. Silent Background Install
     process.stdout.write("📦 Optimizing engine dependencies... ");
@@ -165,12 +316,51 @@ if (command === "init") {
     console.log(`\n✨ Project created in ${Math.round(end - start)}ms`);
     console.log(`\n📂 Get started:`);
     console.log(`   cd ${projectName}`);
-    console.log(`   bun --hot server.js\n`);
+    console.log(`   bun --hot ${serverFileName}\n`);
 }
 
 // --- TEMPLATES (Optimized for Server-Side Rendering) ---
 
-function getFrameworkTemplate() {
+function getFrameworkTemplate(isTypeScript = false) {
+    if (isTypeScript) {
+        return `import { getDynamicCSS } from './tailwind.js';
+export const html = (strings: TemplateStringsArray, ...values: any[]) => strings.reduce((acc, str, i) => acc + str + (values[i] || ""), "");
+export async function renderPage(pageResult: any) {
+    const { head = "", body } = typeof pageResult === 'object' && pageResult !== null && 'body' in pageResult 
+        ? pageResult 
+        : { body: pageResult };
+    
+    const css = await getDynamicCSS(body);
+    const nexaProxyScript = \`
+    <script>
+    // Nexa Zero-API Layer - Client-Side Proxy
+    window.Nexa = {
+        services: new Proxy({}, {
+            get(target, serviceName) {
+                return new Proxy({}, {
+                    get(target, methodName) {
+                        return async (...args) => {
+                            const response = await fetch('/__nexa_proxy', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ service: serviceName, method: methodName, args })
+                            });
+                            
+                            const result = await response.json();
+                            if (!response.ok) throw new Error(result.error || "Nexa Service Error");
+                            return result.data;
+                        };
+                    }
+                });
+            }
+        })
+    };
+    </script>\`;
+    
+    return \`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><style>\${css}</style>\${head}\${nexaProxyScript}</head><body>\${body}</body></html>\`;
+}`;
+    }
+    
     return `import { getDynamicCSS } from './tailwind.js';
 export const html = (strings, ...values) => strings.reduce((acc, str, i) => acc + str + (values[i] || ""), "");
 export async function renderPage(pageResult) {
@@ -179,82 +369,190 @@ export async function renderPage(pageResult) {
         : { body: pageResult };
     
     const css = await getDynamicCSS(body);
-    return \`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><style>\${css}</style>\${head}</head><body>\${body}</body></html>\`;
-}`;
-}
-
-function getRouterTemplate() {
-    return `
-import { renderPage } from './framework.js';
-import { DEFAULT_SECURITY_HEADERS, isSafePath } from './security.js';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-import { existsSync } from 'node:fs';
-
-export async function handleRequest(req) {
-    const url = new URL(req.url);
-    const path = url.pathname;
-
-    // 1. SYSTEM SHIELD: Ignore common browser noise (DevTools, Favicons, Map files)
-    if (path.includes(".json") || path.includes(".ico") || path.includes(".map") || path.includes(".well-known")) {
-        return new Response(null, { status: 404 });
-    }
-
-    // 2. SECURITY CHECK: Prevent directory traversal
-    if (!isSafePath(path)) {
-        return new Response("Forbidden", { status: 403 });
-    }
-
-    try {
-        // 3. API ROUTING
-        if (path.startsWith("/api/")) {
-            const apiPath = join(process.cwd(), "api", path.replace("/api/", "") + ".js");
-            
-            if (!existsSync(apiPath)) return new Response("API Not Found", { status: 404 });
-
-            const module = await import(pathToFileURL(apiPath).href);
-            const method = req.method; // e.g., GET, POST
-            
-            if (module[method]) {
-                const response = await module[method](req);
-                // Apply security headers to API responses
-                Object.entries(DEFAULT_SECURITY_HEADERS).forEach(([key, value]) => {
-                    response.headers.set(key, value);
+    const nexaProxyScript = \`
+    <script>
+    // Nexa Zero-API Layer - Client-Side Proxy
+    window.Nexa = {
+        services: new Proxy({}, {
+            get(target, serviceName) {
+                return new Proxy({}, {
+                    get(target, methodName) {
+                        return async (...args) => {
+                            const response = await fetch('/__nexa_proxy', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ service: serviceName, method: methodName, args })
+                            });
+                            
+                            const result = await response.json();
+                            if (!response.ok) throw new Error(result.error || "Nexa Service Error");
+                            return result.data;
+                        };
+                    }
                 });
-                return response;
             }
-            return new Response("Method Not Allowed", { status: 405 });
-        }
-
-        // 4. PAGE ROUTING
-        const fileName = path === "/" ? "index.js" : path.slice(1) + ".js";
-        const pagePath = join(process.cwd(), "pages", fileName);
-
-        // Security Check: Only attempt import if file exists
-        if (!existsSync(pagePath)) {
-            return new Response("404 - Page Not Found", { status: 404 });
-        }
-
-        const { default: Page } = await import(pathToFileURL(pagePath).href);
-        const content = typeof Page === 'function' ? await Page() : Page;
-        
-        const response = new Response(await renderPage(content), { 
-            headers: { 
-                "Content-Type": "text/html",
-                ...DEFAULT_SECURITY_HEADERS
-            } 
-        });
-        return response;
-
-    } catch (e) { 
-        console.error(\`[Nexa Router Error]: \${e.message}\`);
-        return new Response("Internal Server Error", { status: 500 }); 
-    }
+        })
+    };
+    </script>\`;
+    
+    return \`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><style>\${css}</style>\${head}\${nexaProxyScript}</head><body>\${body}</body></html>\`;
 }`;
 }
 
-function getTailwindTemplate() {
-    return `
+function getServerTemplate(isTypeScript = false) {
+    if (isTypeScript) {
+        return `import { serve } from "bun";
+import { router } from "./core/router";
+
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
+
+console.log(\`🚀 Nexa Framework v1.0.0 - \${new Date().toLocaleString()}\`);
+console.log(\`📡 Listening on http://\${HOST}:\${PORT}\`);
+console.log(\`🎯 Mode: \${process.env.NODE_ENV || "development"}\`);
+console.log(\`🤖 Type: TypeScript\\n\`);
+
+serve({
+    port: PORT,
+    hostname: HOST,
+    fetch: router
+});
+
+// Keep the server alive
+process.on("SIGINT", () => {
+    console.log("\n👋 Goodbye!");
+    process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+    console.log("\n👋 Goodbye!");
+    process.exit(0);
+});`;
+    }
+    
+    return `import { serve } from "bun";
+import { router } from "./core/router.js";
+
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
+
+console.log(\`🚀 Nexa Framework v1.0.0 - \${new Date().toLocaleString()}\`);
+console.log(\`📡 Listening on http://\${HOST}:\${PORT}\`);
+console.log(\`🎯 Mode: \${process.env.NODE_ENV || "development"}\`);
+console.log(\`🤖 Type: JavaScript\\n\`);
+
+serve({
+    port: PORT,
+    hostname: HOST,
+    fetch: router
+});
+
+// Keep the server alive
+process.on("SIGINT", () => {
+    console.log("\n👋 Goodbye!");
+    process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+    console.log("\n👋 Goodbye!");
+    process.exit(0);
+});`;
+}
+
+function getTsConfigTemplate() {
+    return `{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowJs": false,
+    "checkJs": false,
+    "declaration": false,
+    "sourceMap": false,
+    "noEmit": true,
+    "incremental": false
+  },
+  "include": ["**/*"],
+  "exclude": ["node_modules"]
+}`;
+}
+
+async function getRouterTemplate(selectedTemplate, isTypeScript = false) {
+      const routerPath = join(__dirname, "..", "src", "core", "router.js");
+      let routerContent = await readFile(routerPath, "utf-8");
+      
+      if (isTypeScript) {
+          // Fix imports
+          routerContent = routerContent
+            .replace(/from '\.\/framework\.js'/, "from './framework'")
+            .replace(/from '\.\/security\.js'/, "from './security'")
+            .replace(/let jwt;/, "let jwt: any;")
+            .replace(/function extractToken\(req\)/, "function extractToken(req: any)")
+            .replace(/function verifyToken\(token\)/, "function verifyToken(token: string)")
+            .replace(/export async function handleRequest\(req\)/, "export async function handleRequest(req: any)")
+            .replace(/catch \(error\)/g, "catch (error: any)")
+            .replace(/catch \(e\)/g, "catch (e: any)")
+            .replace(/const segments = path === "\/" ? \["index"\] : path.slice\(1\)\.split\("\/"\)/, "const segments: string[] = path === '/' ? ['index'] : path.slice(1).split('/')")
+            .replace(/let params = {}/, "let params: Record<string, string> = {}")
+            .replace(/const protectedRoutes = {/, "const protectedRoutes: Record<string, string[]> = {")
+            .replace(/const publicRoutes = \['\/', '\/login', '\/register'\]/, "const publicRoutes: string[] = ['/', '/login', '/register']")
+            .replace(/cookies.find\(c => c.trim\(\).startsWith\('nexa_access='\)\)/, "cookies.find((c: string) => c.trim().startsWith('nexa_access='))")
+            .replace(/let paramName;/, "let paramName: string = '';")
+            .replace(/function verifyToken\(token: string\)/, "function verifyToken(token: string): { role: string } | null")
+            .replace(/return jwt\.verify\(token, JWT_SECRET\);/, "return jwt.verify(token, JWT_SECRET) as { role: string };")
+            ;
+      }
+      
+      // For non-static templates, use direct import instead of optional import
+      if (selectedTemplate !== "static") {
+          const optionalImportPattern = /\/\/ Make jsonwebtoken optional.*?jwt = null;\s*}/s;
+          routerContent = routerContent.replace(optionalImportPattern, isTypeScript ? `import jwt from 'jsonwebtoken';` : `import jwt from 'jsonwebtoken';`);
+      }
+      
+      return routerContent;
+  }
+
+  function getTailwindTemplate(isTypeScript = false) {
+      if (isTypeScript) {
+          return `
+import { compile } from 'tailwindcss';
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+export async function getDynamicCSS(htmlContent: string): Promise<string> {
+    try {
+        // Use the full default Tailwind CSS from the package
+        const cssPath = join(process.cwd(), 'node_modules', 'tailwindcss', 'index.css');
+        const content = await readFile(cssPath, 'utf-8');
+        const compiler = await compile(content);
+        
+        const candidates = Array.from(htmlContent.matchAll(/class=["']([^"']+)["']/g), (m: any) => m[1].split(/\\s+/)).flat().filter(Boolean);
+        
+        // Build CSS with the identified candidates
+        const cssResult = compiler.build(candidates);
+        
+        if (typeof cssResult === 'string') {
+            return cssResult;
+        } else if (typeof cssResult === 'object' && cssResult !== null && 'css' in cssResult) {
+            return cssResult.css;
+        } else {
+            console.warn("Unexpected CSS result format:", cssResult);
+            return "";
+        }
+    } catch (e: any) { 
+        console.error("Tailwind CSS Error:", e);
+        console.error("Stack trace:", e?.stack);
+        return ""; 
+    }
+}
+`;
+      }
+      return `
 import { compile } from 'tailwindcss';
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
@@ -267,7 +565,7 @@ export async function getDynamicCSS(htmlContent) {
         const compiler = await compile(content);
         
         const candidates = Array.from(htmlContent.matchAll(/class=["']([^"']+)["']/g), m => m[1].split(/\\s+/)).flat().filter(Boolean);
-        console.log("Tailwind CSS candidates:", candidates);
+        
         
         // Build CSS with the identified candidates
         const cssResult = compiler.build(candidates);
@@ -310,29 +608,52 @@ function getHealthTemplate() {
     return `export async function GET() { return Response.json({ status: "ok", memory: process.memoryUsage().heapUsed }); }`;
 }
 
-function getSecurityTemplate() {
-    return `// Security and CORS configuration
-export const DEFAULT_SECURITY_HEADERS = {
-    "X-Frame-Options": "DENY",
-    "X-Content-Type-Options": "nosniff",
-    "Referrer-Policy": "strict-origin-when-cross-origin",
-    "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
-};
-
-export function applyCORSHeaders(headers = {}) {
-    return {
-        ...headers,
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"
-    };
-}
-
-export function isSafePath(path) {
-    // Prevent directory traversal
-    return !path.includes("..") && !path.startsWith("/../") && !path.endsWith("/..");
-}`;
-}
+function getSecurityTemplate(isTypeScript = false) {
+      if (isTypeScript) {
+          return `// Security and CORS configuration
+  export const DEFAULT_SECURITY_HEADERS: Record<string, string> = {
+      "X-Frame-Options": "DENY",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+  };
+  
+  export function applyCORSHeaders(headers: Record<string, string> = {}): Record<string, string> {
+      return {
+          ...headers,
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      };
+  }
+  
+  export function isSafePath(path: string): boolean {
+      // Prevent directory traversal
+      return !path.includes("..") && !path.startsWith("/../") && !path.endsWith("/..");
+  }`;
+      }
+      return `// Security and CORS configuration
+  export const DEFAULT_SECURITY_HEADERS = {
+      "X-Frame-Options": "DENY",
+      "X-Content-Type-Options": "nosniff",
+      "Referrer-Policy": "strict-origin-when-cross-origin",
+      "Permissions-Policy": "geolocation=(), microphone=(), camera=()"
+  };
+  
+  export function applyCORSHeaders(headers = {}) {
+      return {
+          ...headers,
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      };
+  }
+  
+  export function isSafePath(path) {
+      // Prevent directory traversal
+      return !path.includes("..") && !path.startsWith("/../") && !path.endsWith("/..");
+  }`;
+  }
 
 function getServerTemplate() {
     return `import { handleRequest } from './core/router.js';
@@ -467,7 +788,14 @@ Use Services in lib/services/ to parse and deliver this data to pages.
 
 Pro Tip: By using marked on the server, we send the finished HTML to the client, keeping the browser's JavaScript execution at zero.
 
-14. Production & Deployment
+14. Native Type Safety
+First-Class TS: Nexa supports TypeScript out of the box. No build step required.
+
+End-to-End Safety: By using JSDoc or .ts files in lib/services, the Nexa.proxy provides full type inference to the UI.
+
+Zero Overhead: TypeScript is used for developer sanity, but it never adds a "Compile Step" that slows down the deployment pipeline.
+
+15. Production & Deployment
 Zero-Build Production: Since Nexa is "No-Build," deployment simply involves copying the source code and running bun install --production.
 
 Process Management: Always use a process manager like PM2 or a Docker restart policy to ensure 99.9% uptime.

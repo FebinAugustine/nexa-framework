@@ -11,11 +11,9 @@ export async function getDynamicCSS(htmlContent) {
         const compiler = await compile(content);
         
         const candidates = Array.from(htmlContent.matchAll(/class=["']([^"']+)["']/g), m => m[1].split(/\s+/)).flat().filter(Boolean);
-        console.log("Tailwind CSS candidates:", candidates);
         
         // Build CSS with the identified candidates
         const cssResult = compiler.build(candidates);
-        console.log("CSS result type:", typeof cssResult);
         
         if (typeof cssResult === 'string') {
             return cssResult;

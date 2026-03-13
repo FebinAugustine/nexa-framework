@@ -1,0 +1,14 @@
+{
+  "name": "static-ts",
+  "module": "index.ts",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^25.5.0",
+    "@types/tailwindcss": "^3.1.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "name": "nexa-dynamic-blog",
+  "version": "1.0.0",
+  "description": "Dynamic blog application built with Nexa Framework",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run server.js",
+    "start": "NODE_ENV=production bun run server.js"
+  },
+  "keywords": ["nexa", "blog", "dynamic", "web"],
+  "author": "Nexa Framework",
+  "license": "MIT",
+  "dependencies": {
+    "tailwindcss": "latest",
+    "@tailwindcss/node": "latest",
+    "jsonwebtoken": "latest"
+  },
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^25.5.0",
+    "@types/tailwindcss": "^3.1.0"
+  },
+  "peerDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,14 +1,14 @@
-import { signal } from '/core/signals.js';
+import { signal } from '../core/signals';
 
 // Example counter implementation
-export function createCounter(initialValue = 0) {
+export function createCounter(initialValue: number = 0) {
   const count = signal(initialValue);
   
   return {
-    get count() { return count.get(); },
+    get count(): number { return count.get(); },
     increment: () => count.set(count.get() + 1),
     decrement: () => count.set(count.get() - 1),
     reset: () => count.set(0),
-    setValue: (newValue) => count.set(newValue)
+    setValue: (newValue: number) => count.set(newValue)
   };
 }

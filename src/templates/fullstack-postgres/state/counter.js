@@ -1,4 +1,4 @@
-import { signal } from '../core/signals.js';
+import { signal } from '/core/signals.js';
 
 // Example counter implementation
 export function createCounter(initialValue = 0) {

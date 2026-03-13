@@ -124,6 +124,11 @@ Use Services in lib/services/ to parse and deliver this data to pages.
 
 Pro Tip: By using marked on the server, we send the finished HTML to the client, keeping the browser's JavaScript execution at zero.
 
+14. Native Type Safety
+- First-Class TS: Nexa supports TypeScript out of the box. No build step required.
+- End-to-End Safety: By using JSDoc or .ts files in lib/services, the Nexa.proxy provides full type inference to the UI.
+- Zero Overhead: TypeScript is used for developer sanity, but it never adds a "Compile Step" that slows down the deployment pipeline.
+
 14. Production & Deployment
 Zero-Build Production: Since Nexa is "No-Build," deployment simply involves copying the source code and running bun install --production.
 
@@ -209,6 +214,12 @@ export default function ProductPage({ product }) {
 }
 ```
 
+16. Native Type Safety
+
+* **First-Class TS:** Nexa supports TypeScript out of the box. No build step required.
+* **End-to-End Safety:** By using JSDoc or `.ts` files in `lib/services`, the `Nexa.proxy` provides full type inference to the UI.
+* **Zero Overhead:** TypeScript is used for developer sanity, but it never adds a "Compile Step" that slows down the deployment pipeline.
+
 
 16. Competitive Performance Standards
 The Zero-KB Goal: Every page must strive to ship 0kb of initial JavaScript. Any interactivity should be added via small, scoped <script> tags.
@@ -239,3 +250,21 @@ Standardization: All core framework changes must be benchmarked against the 12ms
 Extensibility: Use the lib/ folder for "Plugins." If a feature is common (like Auth), it should be a template in the CLI, not a forced core dependency.
 
 Documentation: Every Service or Component must be documented via JSDoc to ensure AI agents can interpret the logic accurately.
+
+20. The NexaStore Protocol
+
+Centralized Logic: For complex apps, move logic out of <script> tags and into state/ stores.
+
+Action-Only Updates: Direct mutation of global signals is discouraged. Use dispatch() to ensure every state change is traceable.
+
+Persistence: Use the store's subscription model to automatically sync specific signals to cookies or localStorage for session continuity.
+
+21. The Zero-API Layer (Distributed Execution)
+
+Philosophy: The network should be transparent. Calling a server function from the client should feel local.
+
+Constraint: Only functions exported from `lib/services/` are eligible for proxying.
+
+Security: All proxy requests are subjected to the same Security Shield and Auth Gate as standard pages.
+
+Performance: Proxy calls use Bun's native JSON serialization for maximum throughput.
