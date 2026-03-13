@@ -4,8 +4,8 @@
   "description": "Dynamic blog application built with Nexa Framework",
   "type": "module",
   "scripts": {
-    "dev": "bun run server.js",
-    "start": "NODE_ENV=production bun run server.js"
+    "dev": "bun run server.ts",
+    "start": "NODE_ENV=production bun run server.ts"
   },
   "keywords": ["nexa", "blog", "dynamic", "web"],
   "author": "Nexa Framework",

@@ -2,10 +2,10 @@ import { html } from '../core/framework.js';
 
 export function Notification({ type = 'success', message, onClose }) {
     const styles = {
-        success: 'bg-green-50 border-green-200 text-green-700',
-        error: 'bg-red-50 border-red-200 text-red-700',
-        warning: 'bg-yellow-50 border-yellow-200 text-yellow-700',
-        info: 'bg-blue-50 border-blue-200 text-blue-700'
+        success: 'bg-green-900/50 border-green-700 text-green-300',
+        error: 'bg-red-900/50 border-red-700 text-red-300',
+        warning: 'bg-yellow-900/50 border-yellow-700 text-yellow-300',
+        info: 'bg-blue-900/50 border-blue-700 text-blue-300'
     };
 
     return html`
@@ -27,7 +27,7 @@ export function Notification({ type = 'success', message, onClose }) {
             </div>
             <button 
                 onClick="${onClose}"
-                class="ml-4 text-gray-400 hover:text-gray-600 focus:outline-none"
+                class="ml-4 text-gray-400 hover:text-gray-200 focus:outline-none"
             >
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>

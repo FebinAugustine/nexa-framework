@@ -5,67 +5,67 @@ export default function RegisterPage() {
     return {
         head: html`<title>Register - Nexa Admin</title>`,
         body: html`
-            <div class="min-h-screen bg-gray-50">
+            <div class="min-h-screen bg-gray-900">
                 ${Navbar({ user: null })}
                 <main class="max-w-md mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                    <div class="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
-                        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Create your account</h2>
+                    <div class="bg-gray-800 py-8 px-6 shadow rounded-lg sm:px-10">
+                        <h2 class="text-2xl font-bold text-white mb-6 text-center">Create your account</h2>
                         <form id="register-form" class="space-y-6">
                             <div>
-                                <label for="name" class="block text-sm font-medium text-gray-700">Full name</label>
+                                <label for="name" class="block text-sm font-medium text-gray-300">Full name</label>
                                 <input 
                                     id="name" 
                                     name="name" 
                                     type="text" 
                                     required 
-                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                     placeholder="Enter your full name"
                                 />
                             </div>
                             <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                                <label for="email" class="block text-sm font-medium text-gray-300">Email address</label>
                                 <input 
                                     id="email" 
                                     name="email" 
                                     type="email" 
                                     autocomplete="email" 
                                     required 
-                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                     placeholder="Enter your email"
                                 />
                             </div>
                             <div>
-                                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                                <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
                                 <input 
                                     id="password" 
                                     name="password" 
                                     type="password" 
                                     autocomplete="new-password" 
                                     required 
-                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                     placeholder="Create a password (min 6 characters)"
                                     minlength="6"
                                 />
                             </div>
                             <div>
-                                <label for="confirm-password" class="block text-sm font-medium text-gray-700">Confirm password</label>
+                                <label for="confirm-password" class="block text-sm font-medium text-gray-300">Confirm password</label>
                                 <input 
                                     id="confirm-password" 
                                     name="confirm-password" 
                                     type="password" 
                                     autocomplete="new-password" 
                                     required 
-                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                     placeholder="Confirm your password"
                                     minlength="6"
                                 />
                             </div>
                             <div>
-                                <label for="role" class="block text-sm font-medium text-gray-700">Role</label>
+                                <label for="role" class="block text-sm font-medium text-gray-300">Role</label>
                                 <select 
                                     id="role" 
                                     name="role" 
-                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                    class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 text-white bg-gray-700 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
                                 >
                                     <option value="user">User</option>
                                     <option value="admin">Admin</option>
@@ -81,9 +81,9 @@ export default function RegisterPage() {
                             </div>
                         </form>
                         <div class="mt-6 text-center">
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-400">
                                 Already have an account? 
-                                <a href="/login" class="font-medium text-indigo-600 hover:text-indigo-500">
+                                <a href="/login" class="font-medium text-indigo-400 hover:text-indigo-300">
                                     Sign in
                                 </a>
                             </p>

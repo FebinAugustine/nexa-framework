@@ -8,10 +8,10 @@ export default function HomePage(params, user) {
             user,
             children: html`
                 <div class="px-4 py-6 sm:px-0">
-                    <div class="bg-white overflow-hidden shadow sm:rounded-lg">
+                    <div class="bg-gray-800 overflow-hidden shadow sm:rounded-lg">
                         <div class="px-4 py-5 sm:p-6">
-                            <h1 class="text-3xl font-bold text-gray-900 mb-4">Welcome to Nexa Admin Dashboard</h1>
-                            <p class="text-lg text-gray-600 mb-8">
+                            <h1 class="text-3xl font-bold text-white mb-4">Welcome to Nexa Admin Dashboard</h1>
+                            <p class="text-lg text-gray-300 mb-8">
                                 A powerful admin dashboard built with Nexa Framework featuring authentication, role-based routing, and comprehensive user management.
                             </p>
                             
@@ -42,9 +42,9 @@ export default function HomePage(params, user) {
                                 }
                             </script>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div class="bg-indigo-50 p-6 rounded-lg">
-                                    <h2 class="text-xl font-semibold text-indigo-900 mb-2">🎯 Features</h2>
-                                    <ul class="space-y-2 text-indigo-600">
+                                <div class="bg-indigo-900/50 p-6 rounded-lg">
+                                    <h2 class="text-xl font-semibold text-indigo-300 mb-2">🎯 Features</h2>
+                                    <ul class="space-y-2 text-indigo-400">
                                         <li>• User authentication with JWT</li>
                                         <li>• Role-based access control</li>
                                         <li>• Comprehensive user management</li>
@@ -52,9 +52,9 @@ export default function HomePage(params, user) {
                                         <li>• Secure API endpoints</li>
                                     </ul>
                                 </div>
-                                <div class="bg-green-50 p-6 rounded-lg">
-                                    <h2 class="text-xl font-semibold text-green-900 mb-2">🚀 Quick Start</h2>
-                                    <ul class="space-y-2 text-green-600">
+                                <div class="bg-green-900/50 p-6 rounded-lg">
+                                    <h2 class="text-xl font-semibold text-green-300 mb-2">🚀 Quick Start</h2>
+                                    <ul class="space-y-2 text-green-400">
                                         <li>• Run 'bun install' to install dependencies</li>
                                         <li>• Copy .env.example to .env and update configuration</li>
                                         <li>• Run 'bun --hot server.js' to start development server</li>

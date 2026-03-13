@@ -6,8 +6,8 @@ import {
     generateRefreshToken 
 } from '../lib/services/authService.js';
 
-// Fallback if MongoDB is not available
-const USE_FALLBACK = true;
+// Fallback if PostgreSQL is not available
+const USE_FALLBACK = false;
 
 export async function POST(req) {
     try {
@@ -56,10 +56,6 @@ export async function POST(req) {
             // Generate tokens
             const accessToken = generateAccessToken(user);
             const refreshToken = generateRefreshToken(user);
-            
-            // Save refresh token to user
-            user.addRefreshToken(refreshToken);
-            await user.save();
             
             return new Response(
                 JSON.stringify({
@@ -127,9 +123,7 @@ export async function POST(req) {
             const accessToken = generateAccessToken(user);
             const refreshToken = generateRefreshToken(user);
             
-            // Save refresh token to user
-            user.addRefreshToken(refreshToken);
-            await user.save();
+
             
             return new Response(
                 JSON.stringify({

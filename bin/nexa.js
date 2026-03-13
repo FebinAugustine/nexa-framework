@@ -16,7 +16,7 @@ if (command === "init") {
 
     // Template selection
     const templates = ["static", "dynamic", "fullstack-mongodb", "fullstack-postgres"];
-    const tsTemplates = ["static-ts", "dynamic-ts"];
+    const tsTemplates = ["static-ts", "dynamic-ts", "fullstack-mongodb-ts", "fullstack-postgres-ts"];
     const allTemplates = [...templates, ...tsTemplates];
     console.log("\n📋 Available Templates:");
     allTemplates.forEach((template, index) => {
@@ -84,9 +84,9 @@ if (command === "init") {
     }
 
      // 1. Write the Blueprint
-    // Use TypeScript template if --typescript flag is specified and template exists
+     // Use TypeScript template if --typescript flag is specified and template exists
     let finalTemplate = selectedTemplate;
-    if (isTypeScript && !selectedTemplate.includes("-ts") && (selectedTemplate === "static" || selectedTemplate === "dynamic")) {
+    if (isTypeScript && !selectedTemplate.includes("-ts") && (selectedTemplate === "static" || selectedTemplate === "dynamic" || selectedTemplate === "fullstack-mongodb" || selectedTemplate === "fullstack-postgres")) {
         finalTemplate = `${selectedTemplate}-ts`;
         console.log(`🔧 Using TypeScript version of ${selectedTemplate} template...`);
     } else if (isTypeScript && !selectedTemplate.includes("-ts")) {

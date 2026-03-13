@@ -1,4 +1,4 @@
-import { getDynamicCSS } from './tailwind';
+import { getDynamicCSS } from './tailwind.ts';
 export const html = (strings: TemplateStringsArray, ...values: any[]): string => 
     strings.reduce((acc, str, i) => acc + str + (values[i] || ""), "");
 

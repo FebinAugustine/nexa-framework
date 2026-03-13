@@ -5,33 +5,33 @@ export default function LoginPage() {
     return {
         head: html`<title>Login - Nexa Admin</title>`,
         body: html`
-            <div class="min-h-screen bg-gray-50">
+            <div class="min-h-screen bg-gray-900">
                 ${Navbar({ user: null })}
                 <main class="max-w-md mx-auto py-12 px-4 sm:px-6 lg:px-8">
-                    <div class="bg-white py-8 px-6 shadow rounded-lg sm:px-10">
-                        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Sign in to your account</h2>
+                    <div class="bg-gray-800 py-8 px-6 shadow rounded-lg sm:px-10">
+                        <h2 class="text-2xl font-bold text-white mb-6 text-center">Sign in to your account</h2>
                         <form id="login-form" class="space-y-6">
                             <div>
-                                <label for="email" class="block text-sm font-medium text-gray-700">Email address</label>
+                                <label for="email" class="block text-sm font-medium text-gray-300">Email address</label>
                                 <input 
                                     id="email" 
                                     name="email" 
                                     type="email" 
                                     autocomplete="email" 
                                     required 
-                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                     placeholder="Enter your email"
                                 />
                             </div>
                             <div>
-                                <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                                <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
                                 <input 
                                     id="password" 
                                     name="password" 
                                     type="password" 
                                     autocomplete="current-password" 
                                     required 
-                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
+                                    class="mt-1 appearance-none relative block w-full px-3 py-2 border border-gray-600 placeholder-gray-500 text-white bg-gray-700 rounded-md focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                                     placeholder="Enter your password"
                                 />
                             </div>
@@ -41,14 +41,14 @@ export default function LoginPage() {
                                         id="remember-me" 
                                         name="remember-me" 
                                         type="checkbox" 
-                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                                        class="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-500 rounded"
                                     />
-                                    <label for="remember-me" class="ml-2 block text-sm text-gray-900">
+                                    <label for="remember-me" class="ml-2 block text-sm text-gray-300">
                                         Remember me
                                     </label>
                                 </div>
                                 <div class="text-sm">
-                                    <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
+                                    <a href="#" class="font-medium text-indigo-400 hover:text-indigo-300">
                                         Forgot your password?
                                     </a>
                                 </div>
@@ -63,9 +63,9 @@ export default function LoginPage() {
                             </div>
                         </form>
                         <div class="mt-6 text-center">
-                            <p class="text-sm text-gray-600">
+                            <p class="text-sm text-gray-400">
                                 Don't have an account? 
-                                <a href="/register" class="font-medium text-indigo-600 hover:text-indigo-500">
+                                <a href="/register" class="font-medium text-indigo-400 hover:text-indigo-300">
                                     Sign up
                                 </a>
                             </p>
