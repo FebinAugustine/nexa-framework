@@ -172,12 +172,38 @@ export async function handleRequest(req) {
             }
         }
 
-        // 4. CORE ASSETS ROUTING: Serve framework files like signals.js
+        // 4. CORE ASSETS ROUTING: Serve framework files like signals.js or signals.ts
         if (path.startsWith("/core/")) {
-            const corePath = join(process.cwd(), "core", path.replace("/core/", ""));
+            let corePath = join(process.cwd(), "core", path.replace("/core/", ""));
+            
+            // Check if file exists with different extensions
+            if (!existsSync(corePath)) {
+                if (existsSync(corePath + ".ts")) corePath += ".ts";
+                else if (existsSync(corePath + ".js")) corePath += ".js";
+                else if (existsSync(corePath + ".tsx")) corePath += ".tsx";
+            }
             
             if (existsSync(corePath)) {
-                const content = await Bun.file(corePath).text();
+                let content = await Bun.file(corePath).text();
+                
+                // Transpile TypeScript to JavaScript if needed
+                if (corePath.endsWith(".ts") || corePath.endsWith(".tsx")) {
+                    try {
+                        const result = await Bun.build({
+                            entrypoints: [corePath],
+                            target: "browser",
+                            format: "esm",
+                            minify: true
+                        });
+                        
+                        if (result.success && result.outputs.length > 0) {
+                            content = await result.outputs[0].text();
+                        }
+                    } catch (error) {
+                        console.error("TypeScript transpilation error for", corePath, error);
+                    }
+                }
+                
                 const response = new Response(content, { 
                     headers: { 
                         "Content-Type": "application/javascript",
@@ -190,12 +216,38 @@ export async function handleRequest(req) {
             }
         }
 
-        // 4. STATE ASSETS ROUTING: Serve state files like authState.js
+        // 4. STATE ASSETS ROUTING: Serve state files like authState.js or authState.ts
         if (path.startsWith("/state/")) {
-            const statePath = join(process.cwd(), "state", path.replace("/state/", ""));
+            let statePath = join(process.cwd(), "state", path.replace("/state/", ""));
+            
+            // Check if file exists with different extensions
+            if (!existsSync(statePath)) {
+                if (existsSync(statePath + ".ts")) statePath += ".ts";
+                else if (existsSync(statePath + ".js")) statePath += ".js";
+                else if (existsSync(statePath + ".tsx")) statePath += ".tsx";
+            }
             
             if (existsSync(statePath)) {
-                const content = await Bun.file(statePath).text();
+                let content = await Bun.file(statePath).text();
+                
+                // Transpile TypeScript to JavaScript if needed
+                if (statePath.endsWith(".ts") || statePath.endsWith(".tsx")) {
+                    try {
+                        const result = await Bun.build({
+                            entrypoints: [statePath],
+                            target: "browser",
+                            format: "esm",
+                            minify: true
+                        });
+                        
+                        if (result.success && result.outputs.length > 0) {
+                            content = await result.outputs[0].text();
+                        }
+                    } catch (error) {
+                        console.error("TypeScript transpilation error for", statePath, error);
+                    }
+                }
+                
                 const response = new Response(content, { 
                     headers: { 
                         "Content-Type": "application/javascript",

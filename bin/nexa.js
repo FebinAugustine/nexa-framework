@@ -17,13 +17,11 @@ if (command === "init") {
     // Template selection
     const templates = ["static", "dynamic", "fullstack-mongodb", "fullstack-postgres"];
     const tsTemplates = ["static-ts", "dynamic-ts"];
+    const allTemplates = [...templates, ...tsTemplates];
     console.log("\n📋 Available Templates:");
-    templates.forEach((template, index) => {
+    allTemplates.forEach((template, index) => {
         console.log(`   ${index + 1}. ${template.charAt(0).toUpperCase() + template.slice(1)}`);
     });
-
-    // Check if TypeScript flag is specified
-    const isTypeScript = args.includes("--typescript") || args.includes("--ts");
 
     // Interactive template selection
      // Check if template is specified via command line --template option
@@ -37,11 +35,11 @@ if (command === "init") {
              templateOption = args[templateIndex + 1];
          }
          
-         if (templateOption && templates.includes(templateOption)) {
+         if (templateOption && allTemplates.includes(templateOption)) {
              selectedTemplate = templateOption;
              console.log(`\n📦 Using ${selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} template (from command line)...`);
          } else {
-             console.log(`\n⚠️  Template "${templateOption}" not found. Available templates: ${templates.join(", ")}`);
+             console.log(`\n⚠️  Template "${templateOption}" not found. Available templates: ${allTemplates.join(", ")}`);
              console.log("\n📦 Using Static template by default...");
              selectedTemplate = "static";
          }
@@ -53,14 +51,14 @@ if (command === "init") {
          });
 
          const answer = await new Promise((resolve) => {
-                readline.question("\n🔧 Choose a template (1-4) or press Enter for Static: ", resolve);
+                readline.question(`\n🔧 Choose a template (1-${allTemplates.length}) or press Enter for Static: `, resolve);
          });
          readline.close();
 
          if (answer) {
              const choice = parseInt(answer.trim());
-             if (choice >= 1 && choice <= templates.length) {
-                 selectedTemplate = templates[choice - 1];
+             if (choice >= 1 && choice <= allTemplates.length) {
+                 selectedTemplate = allTemplates[choice - 1];
              } else {
                  console.log("\n⚠️  Invalid choice. Using Static template...");
                  selectedTemplate = "static";
@@ -69,6 +67,9 @@ if (command === "init") {
      }
 
     console.log(`\n📦 Using ${selectedTemplate.charAt(0).toUpperCase() + selectedTemplate.slice(1)} template...`);
+
+    // Check if TypeScript flag is specified or TypeScript template is selected
+    const isTypeScript = args.includes("--typescript") || args.includes("--ts") || selectedTemplate.includes("-ts");
 
     // Create folders based on template type
      let folders;
@@ -85,10 +86,10 @@ if (command === "init") {
      // 1. Write the Blueprint
     // Use TypeScript template if --typescript flag is specified and template exists
     let finalTemplate = selectedTemplate;
-    if (isTypeScript && (selectedTemplate === "static" || selectedTemplate === "dynamic")) {
+    if (isTypeScript && !selectedTemplate.includes("-ts") && (selectedTemplate === "static" || selectedTemplate === "dynamic")) {
         finalTemplate = `${selectedTemplate}-ts`;
         console.log(`🔧 Using TypeScript version of ${selectedTemplate} template...`);
-    } else if (isTypeScript) {
+    } else if (isTypeScript && !selectedTemplate.includes("-ts")) {
         console.log(`⚠️ TypeScript template not available for ${selectedTemplate}. Using JavaScript template with TypeScript core files...`);
     }
     
