@@ -1,5 +1,14 @@
 # Nexa Framework
 
+## License
+Nexa Framework is released under the **Business Source License 1.1** (BSL 1.1). This license allows for:
+
+- **Non-commercial use**: Personal projects, educational use, and evaluation
+- **Commercial use**: For entities with annual gross revenue under $50,000 USD
+- **Open Source transition**: On March 12, 2030 (or 4 years after initial release, whichever comes first), the framework will transition to the **Apache License 2.0**
+
+For more details, see the [LICENSE.md](LICENSE.md) file.
+
 ## The Motto
 "Power of the Server, Speed of the Browser. No Build. No Hydration."
 
@@ -107,6 +116,21 @@ nexa build
 ```
 
 This pre-compiles all CSS for production.
+
+## Security
+
+Nexa Framework is designed with security as a first-class concern. It provides built-in security protections that automatically safeguard your applications from common web vulnerabilities.
+
+### Key Security Features
+- **Default Security Headers**: X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+- **CORS Configuration**: Cross-origin resource sharing support
+- **Path Traversal Protection**: Prevents directory traversal attacks
+- **Authentication**: JWT-based authentication with HttpOnly, Secure, SameSite=Strict cookies
+- **Authorization**: Role-based access control
+- **Token Management**: Access and refresh token system with silent refresh
+- **Zero-API Layer Security**: Automatic auth checks for proxy calls
+
+For detailed information, see the [security.md](docs/security.md) document.
 
 ## Technical Implementation Details
 

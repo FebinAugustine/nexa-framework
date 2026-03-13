@@ -1,87 +1,217 @@
-Your framework, **Nexa**, is a fascinating hybrid, but if we have to put a label on it: **it is heavily opinionated regarding Architecture and Performance, but non-opinionated regarding Tools.**
+# Nexa Framework Philosophy: Architecturally Opinionated, Tool Agnostic
 
-Think of it like a high-end kitchen: Nexa gives you a very strict layout of where the stove and fridge must go (Architecture), but it doesn't care which brand of pans you use (Tools).
+## Overview
 
-Here is the breakdown of why Nexa sits in this unique position:
+Nexa Framework occupies a unique position in the web development ecosystem. It is **heavily opinionated about architecture and performance** but **completely non-opinionated about the tools you use** to implement your business logic.
 
----
+Think of Nexa like a high-end kitchen:
+- It gives you a strict layout of where the stove and fridge must go (architecture)
+- But it doesn't care which brand of pans you use (tools)
 
-### 1. Where it is Opinionated (The "Nexa Way")
+This unique approach prevents decision fatigue while ensuring optimal performance.
 
-Nexa has very strong "opinions" on how a web application should behave to stay fast. You cannot easily break these rules without fighting the framework:
+## 1. The "Nexa Way": Where We're Opinionated
 
-* **The "No-Build" Rule:** Nexa demands that you do not use a bundler (Vite, Webpack). This is a strong opinion that forces a specific developer workflow.
-* **The "Zero-Hydration" Rule:** It assumes you want a server-first, resumable architecture. It pushes you away from the React-style "hydrate everything" approach.
-* **Directory Structure:** By using file-system routing and strict `lib/services` vs. `api/` separation, it dictates how you must organize your code for scalability.
-* **Reactivity Pattern:** By baking **Signals** into the core, it expresses a strong opinion that fine-grained reactivity is superior to Virtual DOM diffing.
+Nexa has strong opinions on how web applications should be built to stay fast. These opinions are non-negotiable and form the framework's core identity.
 
----
+### A. The Four Commandments of Nexa
 
-### 2. Where it is Non-Opinionated (The Freedom)
+These are the fundamental rules that define the Nexa architecture:
 
-Despite the strict architecture, Nexa is surprisingly "chill" about the libraries you use to get the job done:
+#### 1. Thou Shalt Not Build
+- No bundlers (Vite, Webpack)
+- No compilation pipelines (other than the built-in JIT core)
+- No `dist/` folders
+- Code runs directly from source files
 
-* **Database Agnostic:** It doesn't ship with a specific ORM. Whether you want to use `bun:sqlite`, Prisma, or raw MongoDB drivers, Nexa doesn't care—it just gives you a `lib/` folder to put them in.
-* **HTTP Client Agnostic:** As we discussed, you can use native `fetch`, `axios`, or even `got`. The framework doesn't force a specific wrapper on you.
-* **Styling (Mostly):** While it's optimized for Tailwind v4 JIT, because it's just raw HTML, you could technically ignore Tailwind and write plain CSS files in `public/` if you really wanted to.
+#### 2. Thou Shalt Not Hydrate
+- Interactivity must be "resumed," not "re-rendered"
+- Ship complete HTML to the browser
+- Bind data to the DOM directly
+- No virtual DOM to the client
 
----
+#### 3. Isolation is Law
+- **Services (`lib/services/`):** Business logic only (never know about HTTP)
+- **Controllers (`api/` or `pages/`):** HTTP concerns only (never know about raw SQL or file-system paths)
+- **Components (`components/`):** Stateless UI atoms (pure functions)
+- **State (`state/`):** Signal-based reactivity for client-side logic
 
-### 3. The Verdict: "Architecturally Opinionated"
+#### 4. Reactivity is Fine-Grained
+- No DOM diffing
+- Use **Signals** to bind data directly to DOM elements
+- If data hasn't changed, the DOM shouldn't move
+- Target: < 5ms scripting overhead per state change
 
-If we compare it to the "Big Three":
+### B. Non-Negotiable Architectural Decisions
 
-| Framework | Level of Opinion | Why? |
-| --- | --- | --- |
-| **Angular** | **High** | Dictates everything: Typescript, RXJS, Dependency Injection, Modules. |
-| **Next.js** | **Medium-High** | Dictates routing, data fetching (RSCs), and deployment (Vercel-optimized). |
-| **Express.js** | **Low** | Gives you nothing. You decide the folder structure, the router, and the engine. |
-| **NEXA** | **Medium-High** | **Dictates the "Engine" and "Performance Pattern," but leaves the "Tools" to you.** |
+Nexa enforces specific patterns to ensure consistency and performance:
 
-### Why this is a "Good" Opinion
+#### File-System Routing
+```
+/pages/          → Browser routes (e.g., /about.js maps to /about)
+/api/            → API endpoints (e.g., /api/health.js maps to /api/health)
+/lib/services/   → Business logic (callable via Zero-API Proxy)
+/components/     → Stateless UI components
+/state/          → Client-side reactivity (signals and stores)
+```
 
-In the modern web, being "Non-Opinionated" often leads to "Decision Fatigue" and messy codebases. By being opinionated about **Performance (No-Build, Signals, SSR)**, Nexa saves the developer from making choices that would eventually slow down the site.
+#### Security by Default
+- HttpOnly, Secure, SameSite=Strict cookies for authentication
+- Automatic security headers (CSP, X-Frame-Options, X-XSS-Protection)
+- Silent refresh token management
+- Database-backed refresh tokens
 
-You’ve essentially built a framework that says: *"I will handle the speed; you just handle the business logic."*
+#### Performance Guarantees
+- SSR pages should render in < 50ms
+- Scripting overhead < 5ms per state change
+- Zero initial JavaScript
+- JIT Tailwind CSS injection
 
----
+## 2. The Freedom: Where We're Non-Opinionated
 
-**"Philosophy" section**
-This new section defines the framework's identity and sets clear expectations for any developer or AI agent contributing to the project. Add this to the beginning of the **NEXA_MANIFESTO.md** or as a new **Section 4**.
+Despite the strict architectural rules, Nexa gives you complete freedom over:
 
----
+### A. Databases
+Use any database you want:
+- `bun:sqlite` (built-in)
+- PostgreSQL (with `postgres` npm package)
+- MongoDB (with `mongodb` npm package)
+- Prisma (ORM)
+- Redis (cache)
 
-### 4. The Nexa Philosophy: Architecturally Opinionated, Tool Agnostic
+```javascript
+// lib/sql.js (PostgreSQL)
+import postgres from 'postgres';
+const sql = postgres(process.env.DATABASE_URL);
+export { sql };
 
-Nexa is not a "do whatever you want" library; it is a framework with a strong perspective on how high-performance web applications must be built. It is designed to prevent "Architectural Drift" by enforcing specific patterns.
+// lib/mongodb.js
+import { MongoClient } from 'mongodb';
+const client = new MongoClient(process.env.MONGODB_URL);
+export { client };
+```
 
-#### A. The Four Commandments of Nexa
+### B. HTTP Clients
+Choose any HTTP client:
+- Native `fetch` (recommended for minimal overhead)
+- `axios` (for interceptors)
+- `got` (for advanced features)
 
-1. **Thou Shalt Not Build:** If a feature requires a bundler, a compiler (other than the JIT core), or a `dist/` folder, it does not belong in Nexa.
-2. **Thou Shalt Not Hydrate:** Interactivity must be "resumed," not "re-rendered." We ship HTML, then we bind data. We do not ship a Virtual DOM to the client.
-3. **Isolation is Law:** Business logic (Services) must never know about HTTP. Controllers (API/Pages) must never know about raw SQL or file-system paths.
-4. **Reactivity is Fine-Grained:** We do not "Diff" the DOM. We use **Signals** to bind data directly to elements. If the data hasn't changed, the DOM shouldn't move.
+### C. UI Libraries
+Use any UI approach:
+- Raw HTML with Nexa components
+- Web Components
+- Any framework that works with plain HTML
 
-#### B. Architectural Opinion vs. Tool Freedom
+### D. Styling
+- Tailwind v4 JIT (optimized)
+- Plain CSS files in `public/`
+- CSS-in-JS (though not recommended for performance)
 
-Nexa is opinionated about the **Engine** but neutral about the **Fuel**.
+## 3. Why This Approach Works
 
-* **The Opinion (Strict):** You *must* use File-System Routing. You *must* use the Service-Controller pattern. You *must* use HttpOnly cookies for Auth.
-* **The Freedom (Flexible):** You can use any Database (Postgres, Mongo, SQLite). You can use any HTTP Client (Fetch, Axios). You can use any UI logic (Web Components, raw HTML, Templates).
+### A. The "Pit of Success"
 
-#### C. The "Pit of Success"
+Nexa is designed to put developers in a "Pit of Success." By following the framework's opinions, you're accidentally forced into building a site that scores 100/100 on Google Lighthouse. To build a slow site in Nexa, you have to actively fight the framework's architecture.
 
-Nexa is designed to put developers in a "Pit of Success." By following the framework's opinions, you are accidentally forced into building a site that scores 100/100 on Google Lighthouse. To build a slow site in Nexa, you have to actively fight the framework's architecture.
+### B. Preventing Decision Fatigue
 
----
+Modern web development is overwhelming with choices. Nexa eliminates decision fatigue by making architectural decisions for you, so you can focus on your business logic.
 
-### How to use this Philosophy
+### C. Scalability
 
-*"Can I install Vite to handle my assets?"* 
-*"Can I use Redux for my state?"*, 
-### The answer is found here: 
-**No.** * Instead of **Vite**, we use the **Nexa JIT Core**.
+The strict directory structure and separation of concerns make it easy to:
+- Onboard new developers
+- Maintain large codebases
+- Refactor features
+- Add new functionality
 
-* Instead of **Redux**, we use **Nexa Signal Stores**.
+## 4. Comparison with Other Frameworks
 
-By sticking to these opinions, the framework remains the fastest, leanest, and most maintainable enterprise solution on the market.
+| Framework | Level of Opinion | Key Characteristics |
+|-----------|------------------|---------------------|
+| **Angular** | High | Dictates everything: TypeScript, RxJS, Dependency Injection, Modules |
+| **Next.js** | Medium-High | Dictates routing, data fetching, and deployment |
+| **Express.js** | Low | Gives you nothing; you decide everything |
+| **Nexa** | Medium-High | **Dictates the "Engine" and "Performance Pattern," but leaves the "Tools" to you** |
+
+## 5. Common Questions & Answers
+
+### Q: Can I use Vite for asset handling?
+**A:** No. Nexa has its own JIT core for CSS and asset handling. Using Vite would break the "no-build" philosophy.
+
+### Q: Can I use Redux for state management?
+**A:** No. Nexa's built-in signal-based state management is more lightweight and performs better. It's designed specifically for Nexa's architecture.
+
+### Q: Can I use React components?
+**A:** Yes, but with limitations. You'd need to pre-render React components to HTML on the server. React's hydration model conflicts with Nexa's resumability philosophy.
+
+### Q: Can I use a different CSS framework than Tailwind?
+**A:** Yes. You can write plain CSS files in the `public/` directory and link to them. However, Tailwind v4 JIT is optimized for Nexa's architecture.
+
+## 6. The Nexa Manifesto Philosophy
+
+This philosophy is captured in the **NEXA_MANIFESTO.md** as:
+
+> ### 4. The Nexa Philosophy: Architecturally Opinionated, Tool Agnostic
+> 
+> Nexa is not a "do whatever you want" library; it is a framework with a strong perspective on how high-performance web applications must be built. It is designed to prevent "Architectural Drift" by enforcing specific patterns.
+> 
+> **The Opinion (Strict):** You *must* use File-System Routing. You *must* use the Service-Controller pattern. You *must* use HttpOnly cookies for Auth.
+> 
+> **The Freedom (Flexible):** You can use any Database (Postgres, Mongo, SQLite). You can use any HTTP Client (Fetch, Axios). You can use any UI logic (Web Components, raw HTML, Templates).
+
+## 7. Applying the Philosophy to Development
+
+### A. Project Structure
+
+```
+my-nexa-app/
+├── core/             → Framework engine (immutable)
+├── config/           → Env validation & constants
+├── lib/              → SDK & 3rd-party integrations
+│   └── services/     → Business logic
+├── api/              → Backend endpoints
+├── components/       → Stateless UI atoms
+├── pages/            → SSR views
+├── state/            → Client reactivity
+├── public/           → Static assets (css, images)
+└── server.js         → Entry point
+```
+
+### B. Component Development
+
+```javascript
+// components/Button.js (stateless)
+import { html } from '../core/framework.js';
+
+export function Button({ text, onClick, className = '' }) {
+    return html`<button onclick="${onClick}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ${className}">
+        ${text}
+    </button>`;
+}
+```
+
+### C. Service Implementation
+
+```javascript
+// lib/services/userService.js (business logic)
+export async function getUsers() {
+    // Database query here...
+    return [
+        { id: 1, name: 'John Doe', email: 'john@example.com' },
+        { id: 2, name: 'Jane Smith', email: 'jane@example.com' }
+    ];
+}
+
+export async function createUser(userData) {
+    // Validate and create user...
+    return { id: 3, ...userData };
+}
+```
+
+## Summary
+
+Nexa Framework's unique philosophy of being **architecturally opinionated but tool agnostic** strikes the perfect balance between structure and freedom. By making non-negotiable decisions about performance and architecture, Nexa ensures your application will be fast and maintainable. At the same time, it gives you complete freedom over the tools you use to implement your business logic.
+
+This approach eliminates decision fatigue, prevents architectural drift, and allows developers to focus on what matters most—building great products.

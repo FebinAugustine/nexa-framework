@@ -268,3 +268,18 @@ Constraint: Only functions exported from `lib/services/` are eligible for proxyi
 Security: All proxy requests are subjected to the same Security Shield and Auth Gate as standard pages.
 
 Performance: Proxy calls use Bun's native JSON serialization for maximum throughput.
+
+22. Security by Default
+
+Nexa Framework is designed with security as a first-class concern. It provides built-in security protections that automatically safeguard your applications from common web vulnerabilities.
+
+Key Security Features:
+- **Default Security Headers**: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), Permissions-Policy (disables unnecessary permissions)
+- **CORS Configuration**: Cross-origin resource sharing support with configurable origins and methods
+- **Path Traversal Protection**: Prevents directory traversal attacks by validating all file paths
+- **Authentication**: JWT-based authentication with HttpOnly, Secure, SameSite=Strict cookies
+- **Authorization**: Role-based access control with configurable protected and public routes
+- **Token Management**: Access and refresh token system with silent token refresh
+- **Zero-API Layer Security**: Automatic authentication checks for all proxy calls
+
+Security headers are applied to every response, and the authentication system is designed to be extensible. For detailed information, see the [security.md](security.md) document.
